@@ -7,6 +7,7 @@ create table lookup.county_lkup
     state_prov_cd varchar not null,
     county_cd varchar not null,
     county_name varchar not null,
+    county_fips_cd integer,
     latitude_average varchar,
     longitude_average varchar,
     create_username varchar not null,
@@ -24,6 +25,7 @@ comment on column lookup.county_lkup.state_prov_cd is 'The state or province cod
 comment on column lookup.county_lkup.county_cd is 'A unique code for the county. For the US, this are Federal Information Processing System (FIPS) Codes for States and Counties. FIPS codes are numbers which uniquely identify geographic areas.';
 comment on column lookup.county_lkup.latitude_average is 'Average latitude of the county territory';
 comment on column lookup.county_lkup.longitude_average is 'Average longitude of the state or province territory';
+comment on column lookup.county_lkup.county_fips_cd is 'US Only. FIPS codes are numbers which uniquely identify geographic areas.  The number of digits in FIPS codes vary depending on the level of geography.  State-level FIPS codes have two digits, county-level FIPS codes have five digits of which the first two are the FIPS code of the state to which the county belongs.';
 
 alter table lookup.county_lkup owner to postgres;
 
