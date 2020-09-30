@@ -15,12 +15,12 @@ import (
 )
 
 func main() {
-	//ctx := context.Background()
+	ctx := context.Background()
 
-	//err := loadUSStates(ctx)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
+	err := loadUSStates(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//// one-time use - not needed going forward
 	//names, err := createUSStatesNameJSON()
@@ -36,16 +36,16 @@ func main() {
 	//fmt.Println(string(n))
 
 	// one-time use - not needed going forward
-	usj, err := createUSStatesCodeJSON()
-	if err != nil {
-		fmt.Println(err)
-	}
-	u, err := json.Marshal(usj)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(string(u))
+	//usj, err := createUSStatesCodeJSON()
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//u, err := json.Marshal(usj)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//
+	//fmt.Println(string(u))
 }
 
 // createUSStatesNameJSON was used to create the USStatesNameJSON constant

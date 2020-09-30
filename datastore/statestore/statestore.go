@@ -34,7 +34,7 @@ func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, 
 	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
 
 	result, execErr := t.Tx.ExecContext(ctx,
-		`INSERT INTO lookup.state_prov_cd_lkup (
+		`INSERT INTO lookup.state_prov_lkup (
                                state_prov_id,
                                country_alpha_2_cd,
                                state_prov_cd,
@@ -46,7 +46,7 @@ func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, 
                                create_timestamp, 
                                update_username, 
                                update_timestamp) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 		uuid.New(),         // $1
 		countryAlpha2Code,  // $2
 		s.Code,             // $3
