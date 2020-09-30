@@ -39,6 +39,7 @@ func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, 
                                country_alpha_2_cd,
                                state_prov_cd,
                                state_name,
+                               state_fips_cd,
                                latitude_average,
                                longitude_average,
                                create_username, 
@@ -50,12 +51,13 @@ func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, 
 		countryAlpha2Code,  // $2
 		s.Code,             // $3
 		s.Name,             // $4
-		s.LatitudeAverage,  // $5
-		s.LongitudeAverage, // $6
-		"gilcrest",         // $7
-		time.Now(),         // $8
-		"gilcrest",         // $9
-		time.Now())         // $10
+		s.FIPSCode,         // $5
+		s.LatitudeAverage,  // $6
+		s.LongitudeAverage, // $7
+		"gilcrest",         // $8
+		time.Now(),         // $9
+		"gilcrest",         // $10
+		time.Now())         // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)
