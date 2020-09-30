@@ -1,4 +1,4 @@
-package countrystore
+package statestore
 
 import (
 	"context"
@@ -6,19 +6,18 @@ import (
 	"time"
 
 	"github.com/gilcrest/cspc"
-	"github.com/google/uuid"
-
 	"github.com/gilcrest/errs"
+	"github.com/google/uuid"
 )
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCountry(ctx context.Context, c cspc.Country) error
+	CreateStateProvince(ctx context.Context, countryAlpha2Code string, s cspc.StateProvince) error
 }
 
 // NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
 func NewTx(tx *sql.Tx) (*Tx, error) {
-	const op errs.Op = "datastore/countrystore/NewTx"
+	const op errs.Op = "datastore/statestore/NewTx"
 	if tx == nil {
 		return nil, errs.E(op, errs.MissingField("tx"))
 	}
@@ -30,35 +29,33 @@ type Tx struct {
 	*sql.Tx
 }
 
-// CreateCountry inserts a record in the lookup.country_cd_lkup table
-func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country) error {
-	const op errs.Op = "datastore/countrystore/Tx.Create"
+// CreateStateProvince inserts a record in the lookup.state_prov_cd_lkup table
+func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, s cspc.StateProvince) error {
+	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
 
 	result, execErr := t.Tx.ExecContext(ctx,
-		`INSERT INTO lookup.country_cd_lkup (
-                               country_id,
-                               country_alpha_2_cd, 
-                               country_alpha_3_cd, 
-                               country_un_m49_cd, 
-                               country_name,
+		`INSERT INTO lookup.state_prov_cd_lkup (
+                               state_prov_id,
+                               country_alpha_2_cd,
+                               state_prov_cd,
+                               state_name,
                                latitude_average,
                                longitude_average,
                                create_username, 
                                create_timestamp, 
                                update_username, 
                                update_timestamp) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		uuid.New(),         // $1
-		c.Alpha2Code,       // $2
-		c.Alpha3Code,       // $3
-		c.UNM49Code,        // $4
-		c.Name,             // $5
-		c.LatitudeAverage,  // $6
-		c.LongitudeAverage, // $7
-		"gilcrest",         // $8
-		time.Now(),         // $9
-		"gilcrest",         // $10
-		time.Now())         // $11
+		countryAlpha2Code,  // $2
+		s.Code,             // $3
+		s.Name,             // $4
+		s.LatitudeAverage,  // $5
+		s.LongitudeAverage, // $6
+		"gilcrest",         // $7
+		time.Now(),         // $8
+		"gilcrest",         // $9
+		time.Now())         // $10
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)

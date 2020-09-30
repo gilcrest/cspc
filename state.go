@@ -54,11 +54,15 @@ const USStatesJSON string = `[{"state_prov_cd":"AL","state_name":"Alabama","lati
 {"state_prov_cd":"WI","state_name":"Wisconsin","latitude_average":"43.78444","longitude_average":"-88.787868"},
 {"state_prov_cd":"WY","state_name":"Wyoming","latitude_average":"43.075968","longitude_average":"-107.290284"}]`
 
+// USStatesNameJSON is the JSON array for all US State Names
+// (including DC and Puerto Rico) in alpha order by name
+const USStatesNameJSON string = `["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Puerto Rico","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]`
+
 // StateProvince is a State or Province of a Country
 // that makes up a particular territory
 type StateProvince struct {
-	Code             string `json:"code"`
-	Name             string `json:"name"`
+	Code             string `json:"state_prov_cd"`
+	Name             string `json:"state_name"`
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
 }
