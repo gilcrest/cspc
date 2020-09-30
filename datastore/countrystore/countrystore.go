@@ -35,7 +35,7 @@ func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country) error {
 	const op errs.Op = "datastore/countrystore/Tx.Create"
 
 	result, execErr := t.Tx.ExecContext(ctx,
-		`INSERT INTO lookup.country_cd_lkup (
+		`INSERT INTO lookup.country_lkup (
                                country_id,
                                country_alpha_2_cd, 
                                country_alpha_3_cd, 
