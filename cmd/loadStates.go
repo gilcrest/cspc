@@ -22,30 +22,30 @@ func main() {
 	//	fmt.Println(err)
 	//}
 
-	// one-time use - not needed going forward
-	names, err := createUSStatesNameJSON()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	n, err := json.Marshal(names)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(string(n))
-
-	// one-time use - not needed going forward
-	//a2j, err := createAlpha2JSON()
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//a2, err := json.Marshal(a2j)
+	//// one-time use - not needed going forward
+	//names, err := createUSStatesNameJSON()
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
 	//
-	//fmt.Println(string(a2))
+	//n, err := json.Marshal(names)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//
+	//fmt.Println(string(n))
+
+	// one-time use - not needed going forward
+	usj, err := createUSStatesCodeJSON()
+	if err != nil {
+		fmt.Println(err)
+	}
+	u, err := json.Marshal(usj)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(string(u))
 }
 
 // createUSStatesNameJSON was used to create the USStatesNameJSON constant
@@ -69,26 +69,26 @@ func createUSStatesNameJSON() ([]string, error) {
 	return names, nil
 }
 
-//// createAlpha2JSON was used to create the CountryAlpha2CodeJSON constant
-//func createAlpha2JSON() ([]string, error) {
-//	const op errs.Op = "main/createNameJSON"
-//
-//	var (
-//		countries []cspc.Country
-//		alpha2s   []string
-//	)
-//
-//	err := json.Unmarshal([]byte(cspc.CountryFullJSON), &countries)
-//	if err != nil {
-//		return nil, errs.E(op, err)
-//	}
-//
-//	for _, c := range countries {
-//		alpha2s = append(alpha2s, c.Alpha2Code)
-//	}
-//
-//	return alpha2s, nil
-//}
+// createUSStatesCodeJSON was used to create the USStatesCodeJSON constant
+func createUSStatesCodeJSON() ([]string, error) {
+	const op errs.Op = "main/createUSStatesCodeJSON"
+
+	var (
+		states []cspc.StateProvince
+		codes  []string
+	)
+
+	err := json.Unmarshal([]byte(cspc.USStatesJSON), &states)
+	if err != nil {
+		return nil, errs.E(op, err)
+	}
+
+	for _, s := range states {
+		codes = append(codes, s.Code)
+	}
+
+	return codes, nil
+}
 
 func loadUSStates(ctx context.Context) error {
 	const op errs.Op = "main/loadStates"

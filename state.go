@@ -58,6 +58,10 @@ const USStatesJSON string = `[{"state_prov_cd":"AL","state_name":"Alabama","lati
 // (including DC and Puerto Rico) in alpha order by name
 const USStatesNameJSON string = `["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Puerto Rico","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]`
 
+// USStatesCodeJSON is the JSON array for all US State Codes
+// (including DC and Puerto Rico) in alpha order by name
+const USStatesCodeJSON string = `["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"]`
+
 // StateProvince is a State or Province of a Country
 // that makes up a particular territory
 type StateProvince struct {
