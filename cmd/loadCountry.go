@@ -134,7 +134,7 @@ func loadCountries(ctx context.Context) error {
 		fmt.Printf("Country Name = %s, Alpha 2 Code = %s\n", c.Name, c.Alpha2Code)
 		err = transactor.CreateCountry(ctx, c)
 		if err != nil {
-			return errs.E(op, err)
+			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
 	}
 

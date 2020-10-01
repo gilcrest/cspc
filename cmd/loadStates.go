@@ -132,7 +132,7 @@ func loadUSStates(ctx context.Context) error {
 		fmt.Printf("State Name = %s, Alpha 2 Code = %s\n", s.Name, s.Code)
 		err = transactor.CreateStateProvince(ctx, "US", s)
 		if err != nil {
-			return errs.E(op, err)
+			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
 	}
 
