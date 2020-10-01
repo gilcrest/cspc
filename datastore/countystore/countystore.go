@@ -40,26 +40,24 @@ func (t *Tx) CreateCounty(ctx context.Context, countryAlpha2Code string, statePr
                                state_prov_cd,
                                county_cd,
                                county_name,
-                               county_fips_cd,
                                latitude_average,
                                longitude_average,
                                create_username, 
                                create_timestamp, 
                                update_username, 
                                update_timestamp) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 		uuid.New(),              // $1
 		countryAlpha2Code,       // $2
 		stateProvCd,             // $3
 		county.Code,             // $4
 		county.Name,             // $5
-		county.FIPSCode,         // $6
-		county.LatitudeAverage,  // $7
-		county.LongitudeAverage, // $8
-		"gilcrest",              // $9
-		time.Now(),              // $10
-		"gilcrest",              // $11
-		time.Now())              // $12
+		county.LatitudeAverage,  // $6
+		county.LongitudeAverage, // $7
+		"gilcrest",              // $8
+		time.Now(),              // $9
+		"gilcrest",              // $10
+		time.Now())              // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)
