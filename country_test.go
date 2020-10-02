@@ -54,3 +54,41 @@ func BenchmarkAlpha2s(b *testing.B) {
 		_ = Alpha2s()
 	}
 }
+
+func TestNewCountry(t *testing.T) {
+
+	z := Country{
+		Name:             "Zimbabwe",
+		Alpha2Code:       "ZW",
+		Alpha3Code:       "ZWE",
+		UNM49Code:        716,
+		LatitudeAverage:  "-20",
+		LongitudeAverage: "30",
+		States:           nil,
+	}
+
+	type args struct {
+		cc string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Country
+		wantErr bool
+	}{
+		{name: "Empty string", args: args{cc: ""}, want: Country{}, wantErr: true},
+		{name: "Zimbabwe", args: args{cc: "ZW"}, want: z, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewCountry(tt.args.cc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewCountry() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewCountry() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

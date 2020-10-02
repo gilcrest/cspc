@@ -1,5 +1,11 @@
 package cspc
 
+import (
+	"encoding/json"
+
+	"github.com/gilcrest/errs"
+)
+
 // USStatesJSON is the JSON array for all US States (including DC and Puerto Rico)
 const USStatesJSON string = `[{"state_prov_cd":"AL","state_name":"Alabama","state_fips_cd":"01","latitude_average":"32.318231","longitude_average":"-86.902298"}, 
  {"state_prov_cd":"AK","state_name":"Alaska","state_fips_cd":"02","latitude_average":"63.588753","longitude_average":"-154.493062"}, 
@@ -71,4 +77,18 @@ type StateProvince struct {
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
 	Counties         []County
+}
+
+// USStates returns all US States
+func USStates() ([]StateProvince, error) {
+	const op errs.Op = "cspc/USStates"
+
+	var states []StateProvince
+
+	err := json.Unmarshal([]byte(USStatesJSON), &states)
+	if err != nil {
+		return nil, errs.E(op, err)
+	}
+
+	return states, nil
 }
