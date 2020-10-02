@@ -3169,8 +3169,8 @@ type countyInit struct {
 	Name string `json:"county_name"`
 }
 
-// FindCounties returns a list of Counties for a StateProvince
-func FindCounties(sp StateProvince) ([]County, error) {
+// FindUSCounties returns a list of Counties for a US State
+func FindUSCounties(sp StateProvince) ([]County, error) {
 	const op errs.Op = "cspc/FindCounties"
 
 	var (
@@ -3199,7 +3199,7 @@ func FindCounties(sp StateProvince) ([]County, error) {
 	return counties, nil
 }
 
-// FindUSCountyNames returns a list of County Names for a US StateProvince
+// FindUSCountyNames returns a list of County Names for a US State
 func FindUSCountyNames(sp StateProvince) ([]string, error) {
 	const op errs.Op = "cspc/FindUSCountyNames"
 
@@ -3223,7 +3223,7 @@ func FindUSCountyNames(sp StateProvince) ([]string, error) {
 	return names, nil
 }
 
-// FindUSCountyCodes returns a list of County Codes for a US StateProvince
+// FindUSCountyCodes returns a list of County Codes for a US State
 func FindUSCountyCodes(sp StateProvince) ([]string, error) {
 	const op errs.Op = "cspc/FindUSCountyCodes"
 
