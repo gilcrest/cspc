@@ -78,3 +78,65 @@ func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country) error {
 
 	return nil
 }
+
+// Selector reads records from the db
+type Selector interface {
+	FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error)
+}
+
+// NewDB is an initializer for DB
+func NewDB(db *sql.DB) (*DB, error) {
+	const op errs.Op = "datastore/jurisdictionstore/NewDB"
+	if db == nil {
+		return nil, errs.E(op, errs.MissingField("db"))
+	}
+	return &DB{DB: db}, nil
+}
+
+// DB  struct holds a pointer to a sql database
+type DB struct {
+	*sql.DB
+}
+
+// FindByAlpha2Code returns a Country struct given an Alpha 2 Code
+func (d *DB) FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error) {
+	const op errs.Op = "datastore/jurisdictionstore/DB.FindByExternalID"
+
+	// Prepare the sql statement using bind variables
+	row := d.DB.QueryRowContext(ctx,
+		`select 	l.country_id,
+                       	l.country_alpha_2_cd,
+                       	l.country_alpha_3_cd,
+                   		l.country_un_m49_cd,
+       					l.country_name,
+       					l.latitude_average,
+       					l.longitude_average,
+                       	l.create_username,
+                       	l.create_timestamp,
+                       	l.update_username,
+                       	l.update_timestamp
+                  from lookup.country_lkup l
+                 where l.country_alpha_2_cd =  $1`, a2c)
+
+	c := new(cspc.Country)
+	err := row.Scan(
+		&c.ID,
+		&c.Alpha2Code,
+		&c.Alpha3Code,
+		&c.UNM49Code,
+		&c.Name,
+		&c.LatitudeAverage,
+		&c.LongitudeAverage,
+		&c.CreateUsername,
+		&c.CreateTimestamp,
+		&c.UpdateUsername,
+		&c.UpdateTimestamp)
+
+	if err == sql.ErrNoRows {
+		return cspc.Country{}, errs.E(op, errs.NotExist, "No record found for given Alpha 2 Code")
+	} else if err != nil {
+		return cspc.Country{}, errs.E(op, err)
+	}
+
+	return *c, nil
+}

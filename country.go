@@ -2,6 +2,9 @@ package cspc
 
 import (
 	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/gilcrest/errs"
 )
@@ -263,12 +266,17 @@ const CountryAlpha2CodeJSON string = `["AF","AL","DZ","AS","AD","AO","AI","AQ","
 // Country represents a nation with its own government, occupying
 // a particular territory.
 type Country struct {
+	ID               uuid.UUID
 	Name             string `json:"country_name"`
 	Alpha2Code       string `json:"country_alpha_2_cd"`
 	Alpha3Code       string `json:"country_alpha_3_cd"`
 	UNM49Code        int    `json:"country_un_m49_cd"`
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
+	CreateUsername   string
+	CreateTimestamp  time.Time
+	UpdateUsername   string
+	UpdateTimestamp  time.Time
 	States           []StateProvince
 }
 
