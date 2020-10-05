@@ -29,14 +29,28 @@ type Tx struct {
 	*sql.Tx
 }
 
+// CreateArgs are the arguments for
+type CreateArgs struct {
+	Country   cspc.Country
+	StateProv cspc.StateProvince
+	Username  string
+}
+
+// NewCreateArgs is an initializer for CreateArgs
+func NewCreateArgs(country cspc.Country, stateProv cspc.StateProvince, username string) *CreateArgs {
+	return &CreateArgs{Country: country, StateProv: stateProv, Username: username}
+}
+
 // CreateStateProvince inserts a record in the lookup.state_prov_cd_lkup table
-func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, s cspc.StateProvince) error {
+func (t *Tx) CreateStateProvince(ctx context.Context, args CreateArgs) error {
 	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
+
+	now := time.Now()
 
 	result, execErr := t.Tx.ExecContext(ctx,
 		`INSERT INTO lookup.state_prov_lkup (
                                state_prov_id,
-                               country_alpha_2_cd,
+                               country_id,
                                state_prov_cd,
                                state_name,
                                state_fips_cd,
@@ -47,17 +61,17 @@ func (t *Tx) CreateStateProvince(ctx context.Context, countryAlpha2Code string, 
                                update_username, 
                                update_timestamp) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		uuid.New(),         // $1
-		countryAlpha2Code,  // $2
-		s.Code,             // $3
-		s.Name,             // $4
-		s.FIPSCode,         // $5
-		s.LatitudeAverage,  // $6
-		s.LongitudeAverage, // $7
-		"gilcrest",         // $8
-		time.Now(),         // $9
-		"gilcrest",         // $10
-		time.Now())         // $11
+		uuid.New(),                      // $1
+		args.Country.ID,                 // $2
+		args.StateProv.Code,             // $3
+		args.StateProv.Name,             // $4
+		args.StateProv.FIPSCode,         // $5
+		args.StateProv.LatitudeAverage,  // $6
+		args.StateProv.LongitudeAverage, // $7
+		args.Username,                   // $8
+		now,                             // $9
+		args.Username,                   // $10
+		now)                             // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)
