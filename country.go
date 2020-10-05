@@ -273,11 +273,11 @@ type Country struct {
 	UNM49Code        int    `json:"country_un_m49_cd"`
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
+	States           []StateProvince
 	CreateUsername   string
 	CreateTimestamp  time.Time
 	UpdateUsername   string
 	UpdateTimestamp  time.Time
-	States           []StateProvince
 }
 
 // Names returns a slice of strings containing the Country names

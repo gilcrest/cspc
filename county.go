@@ -2,6 +2,9 @@ package cspc
 
 import (
 	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/gilcrest/errs"
 )
@@ -3158,10 +3161,15 @@ const USCountyJSON string = `[{"county_cd":"01001","county_name":"Autauga County
 // and Counties. FIPS codes are numbers which uniquely identify geographic
 // areas.
 type County struct {
+	ID               uuid.UUID
 	Code             string `json:"county_cd"`
 	Name             string `json:"county_name"`
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
+	CreateUsername   string
+	CreateTimestamp  time.Time
+	UpdateUsername   string
+	UpdateTimestamp  time.Time
 }
 
 type countyInit struct {

@@ -12,7 +12,7 @@ import (
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateStateProvince(ctx context.Context, countryAlpha2Code string, s cspc.StateProvince) error
+	CreateStateProvince(ctx context.Context, args *CreateArgs) error
 }
 
 // NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
@@ -42,7 +42,7 @@ func NewCreateArgs(country cspc.Country, stateProv cspc.StateProvince, username 
 }
 
 // CreateStateProvince inserts a record in the lookup.state_prov_cd_lkup table
-func (t *Tx) CreateStateProvince(ctx context.Context, args CreateArgs) error {
+func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
 	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
 
 	now := time.Now()
@@ -90,4 +90,65 @@ func (t *Tx) CreateStateProvince(ctx context.Context, args CreateArgs) error {
 	}
 
 	return nil
+}
+
+// Selector reads records from the db
+type Selector interface {
+	FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (*cspc.StateProvince, error)
+}
+
+// NewDB is an initializer for DB
+func NewDB(db *sql.DB) (*DB, error) {
+	const op errs.Op = "datastore/statestore/NewDB"
+	if db == nil {
+		return nil, errs.E(op, errs.MissingField("db"))
+	}
+	return &DB{DB: db}, nil
+}
+
+// DB  struct holds a pointer to a sql database
+type DB struct {
+	*sql.DB
+}
+
+// FindByStateProvCode returns a StateProvince struct given an Alpha 2 Code
+func (d *DB) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (*cspc.StateProvince, error) {
+	const op errs.Op = "datastore/statestore/DB.FindByStateProvCode"
+
+	// Prepare the sql statement using bind variables
+	row := d.DB.QueryRowContext(ctx,
+		`select 	l.state_prov_id,
+                       	l.state_prov_cd,
+                   		l.state_name,
+       					l.state_fips_cd,
+       					l.latitude_average,
+       					l.longitude_average,
+                       	l.create_username,
+                       	l.create_timestamp,
+                       	l.update_username,
+                       	l.update_timestamp
+                  from lookup.state_prov_lkup l
+                 where l.country_id = $1
+                   and l.state_prov_cd =  $2`, c.ID, spc)
+
+	sp := new(cspc.StateProvince)
+	err := row.Scan(
+		&sp.ID,
+		&sp.Code,
+		&sp.Name,
+		&sp.FIPSCode,
+		&sp.LatitudeAverage,
+		&sp.LongitudeAverage,
+		&sp.CreateUsername,
+		&sp.CreateTimestamp,
+		&sp.UpdateUsername,
+		&sp.UpdateTimestamp)
+
+	if err == sql.ErrNoRows {
+		return nil, errs.E(op, errs.NotExist, "No record found for given State/Province Code")
+	} else if err != nil {
+		return nil, errs.E(op, err)
+	}
+
+	return sp, nil
 }

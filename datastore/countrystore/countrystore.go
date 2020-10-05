@@ -3,17 +3,15 @@ package countrystore
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/gilcrest/cspc"
-	"github.com/google/uuid"
-
 	"github.com/gilcrest/errs"
+	"github.com/google/uuid"
 )
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCountry(ctx context.Context, c cspc.Country) error
+	CreateCountry(ctx context.Context, c cspc.Country, username string) error
 }
 
 // NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
@@ -31,7 +29,7 @@ type Tx struct {
 }
 
 // CreateCountry inserts a record in the lookup.country_cd_lkup table
-func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country) error {
+func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country, username string) error {
 	const op errs.Op = "datastore/countrystore/Tx.Create"
 
 	result, execErr := t.Tx.ExecContext(ctx,
@@ -55,10 +53,10 @@ func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country) error {
 		c.Name,             // $5
 		c.LatitudeAverage,  // $6
 		c.LongitudeAverage, // $7
-		"gilcrest",         // $8
-		time.Now(),         // $9
-		"gilcrest",         // $10
-		time.Now())         // $11
+		username,           // $8
+		c.CreateTimestamp,  // $9
+		username,           // $10
+		c.UpdateTimestamp)  // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)
@@ -86,7 +84,7 @@ type Selector interface {
 
 // NewDB is an initializer for DB
 func NewDB(db *sql.DB) (*DB, error) {
-	const op errs.Op = "datastore/jurisdictionstore/NewDB"
+	const op errs.Op = "datastore/countrystore/NewDB"
 	if db == nil {
 		return nil, errs.E(op, errs.MissingField("db"))
 	}
@@ -100,7 +98,7 @@ type DB struct {
 
 // FindByAlpha2Code returns a Country struct given an Alpha 2 Code
 func (d *DB) FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error) {
-	const op errs.Op = "datastore/jurisdictionstore/DB.FindByExternalID"
+	const op errs.Op = "datastore/countrystore/DB.FindByAlpha2Code"
 
 	// Prepare the sql statement using bind variables
 	row := d.DB.QueryRowContext(ctx,

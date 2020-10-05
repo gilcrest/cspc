@@ -2,6 +2,9 @@ package cspc
 
 import (
 	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/gilcrest/errs"
 )
@@ -71,12 +74,17 @@ const USStatesCodeJSON string = `["AL","AK","AZ","AR","CA","CO","CT","DE","DC","
 // StateProvince is a State or Province of a Country
 // that makes up a particular territory
 type StateProvince struct {
+	ID               uuid.UUID
 	Code             string `json:"state_prov_cd"`
 	Name             string `json:"state_name"`
 	FIPSCode         string `json:"state_fips_cd"`
 	LatitudeAverage  string `json:"latitude_average"`
 	LongitudeAverage string `json:"longitude_average"`
 	Counties         []County
+	CreateUsername   string
+	CreateTimestamp  time.Time
+	UpdateUsername   string
+	UpdateTimestamp  time.Time
 }
 
 // USStates returns all US States

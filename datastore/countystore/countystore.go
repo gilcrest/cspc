@@ -3,16 +3,14 @@ package countystore
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/errs"
-	"github.com/google/uuid"
 )
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCounty(ctx context.Context, countryAlpha2Code string, stateProvCd string, county cspc.County) error
+	CreateCounty(ctx context.Context, args *CreateArgs) error
 }
 
 // NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
@@ -29,15 +27,26 @@ type Tx struct {
 	*sql.Tx
 }
 
+// CreateArgs are the arguments for CreateCounty
+type CreateArgs struct {
+	StateProv *cspc.StateProvince
+	County    cspc.County
+	Username  string
+}
+
+// NewCreateArgs is an initializer for the CreateArgs struct
+func NewCreateArgs(stateProv *cspc.StateProvince, county cspc.County, username string) *CreateArgs {
+	return &CreateArgs{StateProv: stateProv, County: county, Username: username}
+}
+
 // CreateCounty inserts a record in the lookup.county_lkup table
-func (t *Tx) CreateCounty(ctx context.Context, countryAlpha2Code string, stateProvCd string, county cspc.County) error {
-	const op errs.Op = "datastore/countystore/Tx.CreateStateProvince"
+func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
+	const op errs.Op = "datastore/countystore/Tx.CreateCounty"
 
 	result, execErr := t.Tx.ExecContext(ctx,
 		`INSERT INTO lookup.county_lkup (
                                county_id,
-                               country_alpha_2_cd,
-                               state_prov_cd,
+                               state_prov_id,
                                county_cd,
                                county_name,
                                latitude_average,
@@ -46,18 +55,17 @@ func (t *Tx) CreateCounty(ctx context.Context, countryAlpha2Code string, statePr
                                create_timestamp, 
                                update_username, 
                                update_timestamp) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		uuid.New(),              // $1
-		countryAlpha2Code,       // $2
-		stateProvCd,             // $3
-		county.Code,             // $4
-		county.Name,             // $5
-		county.LatitudeAverage,  // $6
-		county.LongitudeAverage, // $7
-		"gilcrest",              // $8
-		time.Now(),              // $9
-		"gilcrest",              // $10
-		time.Now())              // $11
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		args.County.ID,               // $1
+		args.StateProv.ID,            // $2
+		args.County.Code,             // $3
+		args.County.Name,             // $4
+		args.County.LatitudeAverage,  // $5
+		args.County.LongitudeAverage, // $6
+		args.Username,                // $7
+		args.County.CreateTimestamp,  // $8
+		args.Username,                // $9
+		args.County.UpdateTimestamp)  // $10
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)

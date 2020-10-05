@@ -6,6 +6,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/cspc/app"
 	"github.com/gilcrest/cspc/datastore"
@@ -29,11 +31,17 @@ type countyInit struct {
 	CountyName string `json:"county_name"`
 }
 
+type stateInit struct {
+	Code             string `json:"state_prov_cd"`
+	Name             string `json:"state_name"`
+	FIPSCode         string `json:"state_fips_cd"`
+	LatitudeAverage  string `json:"latitude_average"`
+	LongitudeAverage string `json:"longitude_average"`
+}
+
 func main() {
 	// Initialize cliFlags and return a pointer to it
 	cf := new(cliFlags)
-
-	ctx := context.Background()
 
 	// countries flag allows for loading all countries into lookup.country_lkup
 	// If not set, defaults to false and countries are not loaded
@@ -49,7 +57,27 @@ func main() {
 
 	// all flag allows for loading all countries, states and counties
 	// If not set, defaults to false and individual flags are considered
-	flag.BoolVar(&cf.counties, "counties", false, "all flag allows for loading all countries, states and counties. If not set, individual flags are considered")
+	flag.BoolVar(&cf.all, "all", false, "all flag allows for loading all countries, states and counties. If not set, individual flags are considered")
+
+	// Parse the command line flags from above
+	flag.Parse()
+
+	fmt.Println(cf)
+
+	ctx := context.Background()
+
+	logger := app.NewLogger(zerolog.DebugLevel)
+
+	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
+
+	var datastorer datastore.Datastorer
+	datastorer = datastore.NewDatastore(db)
+
+	a := app.NewApplication(app.Local, datastorer, logger)
 
 	if cf.all {
 		cf.countries = true
@@ -58,26 +86,26 @@ func main() {
 	}
 
 	if cf.countries {
-		err := loadCountries(ctx)
+		err := loadCountries(ctx, a)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	if cf.states {
-		err := loadUSStates(ctx)
+		err := loadUSStates(ctx, a)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	if cf.counties {
-		s, err := mapCounties2States()
+		s, err := mapUSCounties2States(ctx, a)
 		if err != nil {
 			fmt.Println(err)
 		}
 		ctx := context.Background()
-		err = loadCounties2db(ctx, s)
+		err = loadCounties2db(ctx, a, s)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -126,25 +154,10 @@ func createAlpha2JSON() ([]string, error) {
 	return alpha2s, nil
 }
 
-func loadCountries(ctx context.Context) error {
+func loadCountries(ctx context.Context, a *app.Application) error {
 	const op errs.Op = "main/loadCountries"
 
 	var countries []cspc.Country
-
-	logger := app.NewLogger(zerolog.DebugLevel)
-
-	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
-	if err != nil {
-		return errs.E(op, err)
-	}
-	defer cleanup()
-
-	// declare variable as the Transactor interface
-	var datastorer datastore.Datastorer
-
-	datastorer = datastore.NewDatastore(db)
-
-	a := app.NewApplication(app.Local, datastorer, logger)
 
 	tx, err := a.Datastorer.BeginTx(ctx)
 	if err != nil {
@@ -166,7 +179,7 @@ func loadCountries(ctx context.Context) error {
 
 	for _, c := range countries {
 		fmt.Printf("Country Name = %s, Alpha 2 Code = %s\n", c.Name, c.Alpha2Code)
-		err = transactor.CreateCountry(ctx, c)
+		err = transactor.CreateCountry(ctx, c, "gilcrest")
 		if err != nil {
 			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
@@ -248,33 +261,25 @@ func createUSStatesCodeJSON() ([]string, error) {
 	return codes, nil
 }
 
-func loadUSStates(ctx context.Context) error {
+func loadUSStates(ctx context.Context, a *app.Application) error {
 	const op errs.Op = "main/loadStates"
 
 	var states []cspc.StateProvince
-
-	logger := app.NewLogger(zerolog.DebugLevel)
-
-	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
-	if err != nil {
-		return errs.E(op, err)
-	}
-	defer cleanup()
-
-	// declare variable as the Transactor interface
-	var datastorer datastore.Datastorer
-
-	datastorer = datastore.NewDatastore(db)
-
-	a := app.NewApplication(app.Local, datastorer, logger)
 
 	tx, err := a.Datastorer.BeginTx(ctx)
 	if err != nil {
 		return errs.E(op, err)
 	}
 
-	// declare variable as the Transactor interface
-	var transactor statestore.Transactor
+	var (
+		selector   countrystore.Selector
+		transactor statestore.Transactor
+	)
+
+	selector, err = countrystore.NewDB(a.Datastorer.DB())
+	if err != nil {
+		return errs.E(op, err)
+	}
 
 	transactor, err = statestore.NewTx(tx)
 	if err != nil {
@@ -288,7 +293,14 @@ func loadUSStates(ctx context.Context) error {
 
 	for _, s := range states {
 		fmt.Printf("State Name = %s, Alpha 2 Code = %s\n", s.Name, s.Code)
-		err = transactor.CreateStateProvince(ctx, "US", s)
+
+		us, err := selector.FindByAlpha2Code(ctx, "US")
+		if err != nil {
+			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
+		}
+
+		ca := statestore.NewCreateArgs(us, s, "gilcrest")
+		err = transactor.CreateStateProvince(ctx, ca)
 		if err != nil {
 			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
@@ -328,31 +340,58 @@ func statesInit() {
 	fmt.Println(string(u))
 }
 
-func mapCounties2States() ([]*cspc.StateProvince, error) {
-	const op errs.Op = "main/initLoadCounty"
+func mapUSCounties2States(ctx context.Context, a *app.Application) ([]*cspc.StateProvince, error) {
+	const op errs.Op = "main/mapUSCounties2States"
 
 	var (
-		counties []countyInit
-		states   []*cspc.StateProvince
+		ci              []countyInit
+		si              []stateInit
+		states          []*cspc.StateProvince
+		countrySelector countrystore.Selector
+		stateSelector   statestore.Selector
 	)
 
-	err := json.Unmarshal([]byte(cspc.USCountyJSON), &counties)
+	err := json.Unmarshal([]byte(cspc.USCountyJSON), &ci)
 	if err != nil {
 		return nil, errs.E(op, err)
 	}
 
-	err = json.Unmarshal([]byte(cspc.USStatesJSON), &states)
+	err = json.Unmarshal([]byte(cspc.USStatesJSON), &si)
 	if err != nil {
 		return nil, errs.E(op, err)
+	}
+
+	countrySelector, err = countrystore.NewDB(a.Datastorer.DB())
+	if err != nil {
+		return nil, errs.E(op, err)
+	}
+	stateSelector, err = statestore.NewDB(a.Datastorer.DB())
+	if err != nil {
+		return nil, errs.E(op, err)
+	}
+
+	us, err := countrySelector.FindByAlpha2Code(ctx, "US")
+	if err != nil {
+		return nil, errs.E(op, err)
+	}
+
+	// Initialize a true StateProvince struce for each state
+	// initialized from JSON
+	for _, s := range si {
+		ts, err := stateSelector.FindByStateProvCode(ctx, us, s.Code)
+		if err != nil {
+			return nil, errs.E(op, err)
+		}
+		states = append(states, ts)
 	}
 
 	for _, state := range states {
-		for _, ic := range counties {
+		for _, ic := range ci {
 			statefip := ic.CountyCode[:2]
 
 			if state.FIPSCode == statefip {
-
 				c := cspc.County{
+					ID:               uuid.New(),
 					Code:             ic.CountyCode,
 					Name:             ic.CountyName,
 					LatitudeAverage:  "",
@@ -364,43 +403,32 @@ func mapCounties2States() ([]*cspc.StateProvince, error) {
 		}
 	}
 
+	for _, der := range states {
+		fmt.Printf("State = %s\n", der.Name)
+		fmt.Printf("\tCounties = %s", der.Counties)
+	}
+
 	return states, nil
 }
 
-func loadCounties2db(ctx context.Context, states []*cspc.StateProvince) error {
+func loadCounties2db(ctx context.Context, a *app.Application, states []*cspc.StateProvince) error {
 	const op errs.Op = "main/loadCounties2db"
-
-	logger := app.NewLogger(zerolog.DebugLevel)
-
-	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
-	if err != nil {
-		return errs.E(op, err)
-	}
-	defer cleanup()
-
-	// declare variable as the Transactor interface
-	var datastorer datastore.Datastorer
-
-	datastorer = datastore.NewDatastore(db)
-
-	a := app.NewApplication(app.Local, datastorer, logger)
 
 	tx, err := a.Datastorer.BeginTx(ctx)
 	if err != nil {
 		return errs.E(op, err)
 	}
 
-	// declare variable as the Transactor interface
 	var transactor countystore.Transactor
-
 	transactor, err = countystore.NewTx(tx)
 	if err != nil {
 		return errs.E(op, err)
 	}
 
-	for _, s := range states {
-		for _, c := range s.Counties {
-			err = transactor.CreateCounty(ctx, "US", s.Code, c)
+	for _, state := range states {
+		for _, c := range state.Counties {
+			arg := countystore.NewCreateArgs(state, c, "gilcrest")
+			err = transactor.CreateCounty(ctx, arg)
 			if err != nil {
 				return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 			}

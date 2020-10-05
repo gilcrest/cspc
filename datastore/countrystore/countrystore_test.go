@@ -17,7 +17,7 @@ func TestDB_FindByAlpha2Code(t *testing.T) {
 	logger := app.NewLogger(zerolog.DebugLevel)
 	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer cleanup()
 
