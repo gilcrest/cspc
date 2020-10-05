@@ -3,9 +3,9 @@ create table lookup.state_prov_lkup
     state_prov_id uuid not null
         constraint state_prov_lkup_pk
             primary key,
-    country_alpha_2_cd varchar(2) not null
+    country_id uuid not null
         constraint state_prov_lkup_fk
-            references lookup.country_lkup (country_alpha_2_cd),
+            references lookup.country_lkup (country_id),
     state_prov_cd varchar not null,
     state_name varchar not null,
     state_fips_cd integer,
@@ -16,7 +16,7 @@ create table lookup.state_prov_lkup
     update_username varchar not null,
     update_timestamp timestamp with time zone default CURRENT_TIMESTAMP not null,
     constraint state_prov_lkup_pk_2
-        unique (country_alpha_2_cd, state_prov_cd)
+        unique (country_id, state_prov_cd)
 );
 
 comment on table lookup.state_prov_lkup is 'State and Province Code by Country Lookup';
