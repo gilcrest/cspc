@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestFindCounties(t *testing.T) {
+func TestFindUSCounties(t *testing.T) {
 
 	ma := StateProvince{
 		Code:             "MA",
@@ -89,7 +89,7 @@ func TestFindCounties(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := FindCounties(tt.args.sp)
+			got, err := FindUSCounties(tt.args.sp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindCounties() error = %v, wantErr %v", err, tt.wantErr)
 				return
