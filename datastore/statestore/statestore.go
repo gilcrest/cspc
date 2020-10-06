@@ -3,11 +3,9 @@ package statestore
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/errs"
-	"github.com/google/uuid"
 )
 
 // Transactor performs DML actions against the DB
@@ -33,19 +31,16 @@ type Tx struct {
 type CreateArgs struct {
 	Country   cspc.Country
 	StateProv cspc.StateProvince
-	Username  string
 }
 
 // NewCreateArgs is an initializer for CreateArgs
 func NewCreateArgs(country cspc.Country, stateProv cspc.StateProvince, username string) *CreateArgs {
-	return &CreateArgs{Country: country, StateProv: stateProv, Username: username}
+	return &CreateArgs{Country: country, StateProv: stateProv}
 }
 
 // CreateStateProvince inserts a record in the lookup.state_prov_cd_lkup table
 func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
 	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
-
-	now := time.Now()
 
 	result, execErr := t.Tx.ExecContext(ctx,
 		`INSERT INTO lookup.state_prov_lkup (
@@ -61,17 +56,17 @@ func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
                                update_username, 
                                update_timestamp) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		uuid.New(),                      // $1
+		args.StateProv.ID,               // $1
 		args.Country.ID,                 // $2
 		args.StateProv.Code,             // $3
 		args.StateProv.Name,             // $4
 		args.StateProv.FIPSCode,         // $5
 		args.StateProv.LatitudeAverage,  // $6
 		args.StateProv.LongitudeAverage, // $7
-		args.Username,                   // $8
-		now,                             // $9
-		args.Username,                   // $10
-		now)                             // $11
+		args.StateProv.CreateUsername,   // $8
+		args.StateProv.CreateTimestamp,  // $9
+		args.StateProv.UpdateUsername,   // $10
+		args.StateProv.UpdateTimestamp)  // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)

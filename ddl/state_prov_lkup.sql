@@ -8,7 +8,7 @@ create table lookup.state_prov_lkup
             references lookup.country_lkup (country_id),
     state_prov_cd varchar not null,
     state_name varchar not null,
-    state_fips_cd integer,
+    state_fips_cd varchar(2),
     latitude_average varchar,
     longitude_average varchar,
     create_username varchar not null,

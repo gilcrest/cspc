@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -157,7 +158,7 @@ func createAlpha2JSON() ([]string, error) {
 func loadCountries(ctx context.Context, a *app.Application) error {
 	const op errs.Op = "main/loadCountries"
 
-	var countries []cspc.Country
+	var countries []*cspc.Country
 
 	tx, err := a.Datastorer.BeginTx(ctx)
 	if err != nil {
@@ -179,7 +180,13 @@ func loadCountries(ctx context.Context, a *app.Application) error {
 
 	for _, c := range countries {
 		fmt.Printf("Country Name = %s, Alpha 2 Code = %s\n", c.Name, c.Alpha2Code)
-		err = transactor.CreateCountry(ctx, c, "gilcrest")
+		now := time.Now()
+		c.ID = uuid.New()
+		c.CreateUsername = "gilcrest"
+		c.CreateTimestamp = now
+		c.UpdateUsername = "gilcrest"
+		c.UpdateTimestamp = now
+		err = transactor.CreateCountry(ctx, c)
 		if err != nil {
 			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
@@ -272,11 +279,11 @@ func loadUSStates(ctx context.Context, a *app.Application) error {
 	}
 
 	var (
-		selector   countrystore.Selector
-		transactor statestore.Transactor
+		countrySelector countrystore.Selector
+		transactor      statestore.Transactor
 	)
 
-	selector, err = countrystore.NewDB(a.Datastorer.DB())
+	countrySelector, err = countrystore.NewDB(a.Datastorer.DB())
 	if err != nil {
 		return errs.E(op, err)
 	}
@@ -294,13 +301,19 @@ func loadUSStates(ctx context.Context, a *app.Application) error {
 	for _, s := range states {
 		fmt.Printf("State Name = %s, Alpha 2 Code = %s\n", s.Name, s.Code)
 
-		us, err := selector.FindByAlpha2Code(ctx, "US")
+		us, err := countrySelector.FindByAlpha2Code(ctx, "US")
 		if err != nil {
 			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
 
-		ca := statestore.NewCreateArgs(us, s, "gilcrest")
-		err = transactor.CreateStateProvince(ctx, ca)
+		s.ID = uuid.New()
+		now := time.Now()
+		s.CreateUsername = "gilcrest"
+		s.CreateTimestamp = now
+		s.UpdateUsername = "gilcrest"
+		s.UpdateTimestamp = now
+
+		err = transactor.CreateStateProvince(ctx, statestore.NewCreateArgs(us, s, "gilcrest"))
 		if err != nil {
 			return errs.E(op, a.Datastorer.RollbackTx(tx, err))
 		}
@@ -390,22 +403,22 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]*cspc.Stat
 			statefip := ic.CountyCode[:2]
 
 			if state.FIPSCode == statefip {
+				now := time.Now()
 				c := cspc.County{
 					ID:               uuid.New(),
 					Code:             ic.CountyCode,
 					Name:             ic.CountyName,
 					LatitudeAverage:  "",
 					LongitudeAverage: "",
+					CreateUsername:   "gilcrest",
+					CreateTimestamp:  now,
+					UpdateUsername:   "gilcrest",
+					UpdateTimestamp:  now,
 				}
 
 				state.Counties = append(state.Counties, c)
 			}
 		}
-	}
-
-	for _, der := range states {
-		fmt.Printf("State = %s\n", der.Name)
-		fmt.Printf("\tCounties = %s", der.Counties)
 	}
 
 	return states, nil
@@ -427,7 +440,7 @@ func loadCounties2db(ctx context.Context, a *app.Application, states []*cspc.Sta
 
 	for _, state := range states {
 		for _, c := range state.Counties {
-			arg := countystore.NewCreateArgs(state, c, "gilcrest")
+			arg := countystore.NewCreateArgs(state, c)
 			err = transactor.CreateCounty(ctx, arg)
 			if err != nil {
 				return errs.E(op, a.Datastorer.RollbackTx(tx, err))

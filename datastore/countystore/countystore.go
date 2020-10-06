@@ -31,12 +31,11 @@ type Tx struct {
 type CreateArgs struct {
 	StateProv *cspc.StateProvince
 	County    cspc.County
-	Username  string
 }
 
 // NewCreateArgs is an initializer for the CreateArgs struct
-func NewCreateArgs(stateProv *cspc.StateProvince, county cspc.County, username string) *CreateArgs {
-	return &CreateArgs{StateProv: stateProv, County: county, Username: username}
+func NewCreateArgs(stateProv *cspc.StateProvince, county cspc.County) *CreateArgs {
+	return &CreateArgs{StateProv: stateProv, County: county}
 }
 
 // CreateCounty inserts a record in the lookup.county_lkup table
@@ -62,9 +61,9 @@ func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
 		args.County.Name,             // $4
 		args.County.LatitudeAverage,  // $5
 		args.County.LongitudeAverage, // $6
-		args.Username,                // $7
+		args.County.CreateUsername,   // $7
 		args.County.CreateTimestamp,  // $8
-		args.Username,                // $9
+		args.County.UpdateUsername,   // $9
 		args.County.UpdateTimestamp)  // $10
 
 	if execErr != nil {

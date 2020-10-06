@@ -6,12 +6,11 @@ import (
 
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/errs"
-	"github.com/google/uuid"
 )
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCountry(ctx context.Context, c cspc.Country, username string) error
+	CreateCountry(ctx context.Context, c *cspc.Country) error
 }
 
 // NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
@@ -29,7 +28,7 @@ type Tx struct {
 }
 
 // CreateCountry inserts a record in the lookup.country_cd_lkup table
-func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country, username string) error {
+func (t *Tx) CreateCountry(ctx context.Context, c *cspc.Country) error {
 	const op errs.Op = "datastore/countrystore/Tx.Create"
 
 	result, execErr := t.Tx.ExecContext(ctx,
@@ -46,16 +45,16 @@ func (t *Tx) CreateCountry(ctx context.Context, c cspc.Country, username string)
                                update_username, 
                                update_timestamp) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		uuid.New(),         // $1
+		c.ID,               // $1
 		c.Alpha2Code,       // $2
 		c.Alpha3Code,       // $3
 		c.UNM49Code,        // $4
 		c.Name,             // $5
 		c.LatitudeAverage,  // $6
 		c.LongitudeAverage, // $7
-		username,           // $8
+		c.CreateUsername,   // $8
 		c.CreateTimestamp,  // $9
-		username,           // $10
+		c.UpdateUsername,   // $10
 		c.UpdateTimestamp)  // $11
 
 	if execErr != nil {
