@@ -84,3 +84,62 @@ func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
 
 	return nil
 }
+
+// Selector reads records from the db
+type Selector interface {
+	FindByCountyCode(ctx context.Context, cc string) (cspc.Country, error)
+}
+
+// NewDB is an initializer for DB
+func NewDB(db *sql.DB) (*DB, error) {
+	const op errs.Op = "datastore/countystore/NewDB"
+	if db == nil {
+		return nil, errs.E(op, errs.MissingField("db"))
+	}
+	return &DB{DB: db}, nil
+}
+
+// DB  struct holds a pointer to a sql database
+type DB struct {
+	*sql.DB
+}
+
+// FindByCountyCode returns a County struct given a StateProvince and a County Code
+func (d *DB) FindByCountyCode(ctx context.Context, s *cspc.StateProvince, cc string) (cspc.County, error) {
+	const op errs.Op = "datastore/countystore/DB.FindByCountyCode"
+
+	// Prepare the sql statement using bind variables
+	row := d.DB.QueryRowContext(ctx,
+		`select 	l.county_id,
+                       	l.county_cd,
+       					l.county_name,
+       					l.latitude_average,
+       					l.longitude_average,
+                       	l.create_username,
+                       	l.create_timestamp,
+                       	l.update_username,
+                       	l.update_timestamp
+                  from lookup.county_lkup l
+                 where l.state_prov_id =  $1
+                   and l.county_cd = $2`, s.ID, cc)
+
+	c := new(cspc.County)
+	err := row.Scan(
+		&c.ID,
+		&c.Code,
+		&c.Name,
+		&c.LatitudeAverage,
+		&c.LongitudeAverage,
+		&c.CreateUsername,
+		&c.CreateTimestamp,
+		&c.UpdateUsername,
+		&c.UpdateTimestamp)
+
+	if err == sql.ErrNoRows {
+		return cspc.County{}, errs.E(op, errs.NotExist, "No record found for given County Code")
+	} else if err != nil {
+		return cspc.County{}, errs.E(op, err)
+	}
+
+	return *c, nil
+}
