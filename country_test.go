@@ -55,9 +55,9 @@ func BenchmarkAlpha2s(b *testing.B) {
 	}
 }
 
-func TestNewCountry(t *testing.T) {
+func TestFindCountryInJSONByAlpha2Code(t *testing.T) {
 
-	z := Country{
+	z := &Country{
 		Name:             "Zimbabwe",
 		Alpha2Code:       "ZW",
 		Alpha3Code:       "ZWE",
@@ -73,15 +73,15 @@ func TestNewCountry(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    Country
+		want    *Country
 		wantErr bool
 	}{
-		{name: "Empty string", args: args{cc: ""}, want: Country{}, wantErr: true},
+		{name: "Empty string", args: args{cc: ""}, want: nil, wantErr: true},
 		{name: "Zimbabwe", args: args{cc: "ZW"}, want: z, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCountry(tt.args.cc)
+			got, err := FindCountryInJSONByAlpha2Code(tt.args.cc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewCountry() error = %v, wantErr %v", err, tt.wantErr)
 				return

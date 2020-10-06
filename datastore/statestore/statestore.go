@@ -89,7 +89,7 @@ func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
 
 // Selector reads records from the db
 type Selector interface {
-	FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (*cspc.StateProvince, error)
+	FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (cspc.StateProvince, error)
 }
 
 // NewDB is an initializer for DB
@@ -107,7 +107,7 @@ type DB struct {
 }
 
 // FindByStateProvCode returns a StateProvince struct given an Alpha 2 Code
-func (d *DB) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (*cspc.StateProvince, error) {
+func (d *DB) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (cspc.StateProvince, error) {
 	const op errs.Op = "datastore/statestore/DB.FindByStateProvCode"
 
 	// Prepare the sql statement using bind variables
@@ -140,10 +140,10 @@ func (d *DB) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string
 		&sp.UpdateTimestamp)
 
 	if err == sql.ErrNoRows {
-		return nil, errs.E(op, errs.NotExist, "No record found for given State/Province Code")
+		return cspc.StateProvince{}, errs.E(op, errs.NotExist, "No record found for given State/Province Code")
 	} else if err != nil {
-		return nil, errs.E(op, err)
+		return cspc.StateProvince{}, errs.E(op, err)
 	}
 
-	return sp, nil
+	return *sp, nil
 }

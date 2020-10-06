@@ -29,12 +29,12 @@ type Tx struct {
 
 // CreateArgs are the arguments for CreateCounty
 type CreateArgs struct {
-	StateProv *cspc.StateProvince
+	StateProv cspc.StateProvince
 	County    cspc.County
 }
 
 // NewCreateArgs is an initializer for the CreateArgs struct
-func NewCreateArgs(stateProv *cspc.StateProvince, county cspc.County) *CreateArgs {
+func NewCreateArgs(stateProv cspc.StateProvince, county cspc.County) *CreateArgs {
 	return &CreateArgs{StateProv: stateProv, County: county}
 }
 

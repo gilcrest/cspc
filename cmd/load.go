@@ -353,13 +353,13 @@ func statesInit() {
 	fmt.Println(string(u))
 }
 
-func mapUSCounties2States(ctx context.Context, a *app.Application) ([]*cspc.StateProvince, error) {
+func mapUSCounties2States(ctx context.Context, a *app.Application) ([]cspc.StateProvince, error) {
 	const op errs.Op = "main/mapUSCounties2States"
 
 	var (
 		ci              []countyInit
 		si              []stateInit
-		states          []*cspc.StateProvince
+		states          []cspc.StateProvince
 		countrySelector countrystore.Selector
 		stateSelector   statestore.Selector
 	)
@@ -424,7 +424,7 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]*cspc.Stat
 	return states, nil
 }
 
-func loadCounties2db(ctx context.Context, a *app.Application, states []*cspc.StateProvince) error {
+func loadCounties2db(ctx context.Context, a *app.Application, states []cspc.StateProvince) error {
 	const op errs.Op = "main/loadCounties2db"
 
 	tx, err := a.Datastorer.BeginTx(ctx)
