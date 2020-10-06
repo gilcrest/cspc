@@ -87,7 +87,7 @@ func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
 
 // Selector reads records from the db
 type Selector interface {
-	FindByCountyCode(ctx context.Context, cc string) (cspc.Country, error)
+	FindByCountyCode(ctx context.Context, s *cspc.StateProvince, cc string) (cspc.County, error)
 }
 
 // NewDB is an initializer for DB
