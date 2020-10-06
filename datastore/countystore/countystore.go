@@ -87,7 +87,7 @@ func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
 
 // Selector reads records from the db
 type Selector interface {
-	FindByCountyCode(ctx context.Context, s *cspc.StateProvince, cc string) (cspc.County, error)
+	FindByCountyCode(ctx context.Context, s cspc.StateProvince, cc string) (cspc.County, error)
 }
 
 // NewDB is an initializer for DB
@@ -105,7 +105,7 @@ type DB struct {
 }
 
 // FindByCountyCode returns a County struct given a StateProvince and a County Code
-func (d *DB) FindByCountyCode(ctx context.Context, s *cspc.StateProvince, cc string) (cspc.County, error) {
+func (d *DB) FindByCountyCode(ctx context.Context, s cspc.StateProvince, cc string) (cspc.County, error) {
 	const op errs.Op = "datastore/countystore/DB.FindByCountyCode"
 
 	// Prepare the sql statement using bind variables
