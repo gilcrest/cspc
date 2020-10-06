@@ -359,7 +359,8 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]cspc.State
 	var (
 		ci              []countyInit
 		si              []stateInit
-		states          []cspc.StateProvince
+		states          []*cspc.StateProvince
+		finalStates     []cspc.StateProvince
 		countrySelector countrystore.Selector
 		stateSelector   statestore.Selector
 	)
@@ -395,7 +396,7 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]cspc.State
 		if err != nil {
 			return nil, errs.E(op, err)
 		}
-		states = append(states, ts)
+		states = append(states, &ts)
 	}
 
 	for _, state := range states {
@@ -421,7 +422,12 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]cspc.State
 		}
 	}
 
-	return states, nil
+	for _, s := range states {
+		fmt.Printf("%s has %d counties\n", s.Name, len(s.Counties))
+		finalStates = append(finalStates, *s)
+	}
+
+	return finalStates, nil
 }
 
 func loadCounties2db(ctx context.Context, a *app.Application, states []cspc.StateProvince) error {
