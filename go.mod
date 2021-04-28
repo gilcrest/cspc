@@ -7,5 +7,6 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/lib/pq v1.10.1
 	github.com/matryer/is v1.4.0
+	github.com/peterbourgon/ff v1.7.0
 	github.com/rs/zerolog v1.21.0
 )
