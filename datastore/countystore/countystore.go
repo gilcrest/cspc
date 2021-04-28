@@ -12,39 +12,25 @@ import (
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCounty(ctx context.Context, args *CreateArgs) error
+	CreateCounty(ctx context.Context, stateProv cspc.StateProvince, county cspc.County, tx *sql.Tx) error
 }
 
-// NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
-func NewTx(tx *sql.Tx) (*Tx, error) {
-	const op errs.Op = "datastore/countystore/NewTx"
-	if tx == nil {
-		return nil, errs.E(op, errs.MissingField("tx"))
-	}
-	return &Tx{Tx: tx}, nil
+// NewDefaultTransactor is an initializer for DefaultTransactor
+func NewDefaultTransactor(ds datastore.Datastorer) DefaultTransactor {
+	return DefaultTransactor{ds}
 }
 
-// Tx stores a sql.Tx which will be used for all DML operations
-type Tx struct {
-	*sql.Tx
-}
-
-// CreateArgs are the arguments for CreateCounty
-type CreateArgs struct {
-	StateProv cspc.StateProvince
-	County    cspc.County
-}
-
-// NewCreateArgs is an initializer for the CreateArgs struct
-func NewCreateArgs(stateProv cspc.StateProvince, county cspc.County) *CreateArgs {
-	return &CreateArgs{StateProv: stateProv, County: county}
+// DefaultTransactor is the default database implementation
+// for DML operations
+type DefaultTransactor struct {
+	datastorer datastore.Datastorer
 }
 
 // CreateCounty inserts a record in the lookup.county_lkup table
-func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
-	const op errs.Op = "datastore/countystore/Tx.CreateCounty"
+func (dt DefaultTransactor) CreateCounty(ctx context.Context, stateProv cspc.StateProvince, county cspc.County, tx *sql.Tx) error {
+	const op errs.Op = "datastore/countystore/DefaultTransactor.CreateCounty"
 
-	result, execErr := t.Tx.ExecContext(ctx,
+	result, execErr := tx.ExecContext(ctx,
 		`INSERT INTO lookup.county_lkup (
                                county_id,
                                state_prov_id,
@@ -57,16 +43,16 @@ func (t *Tx) CreateCounty(ctx context.Context, args *CreateArgs) error {
                                update_username, 
                                update_timestamp) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-		args.County.ID,               // $1
-		args.StateProv.ID,            // $2
-		args.County.Code,             // $3
-		args.County.Name,             // $4
-		args.County.LatitudeAverage,  // $5
-		args.County.LongitudeAverage, // $6
-		args.County.CreateUsername,   // $7
-		args.County.CreateTimestamp,  // $8
-		args.County.UpdateUsername,   // $9
-		args.County.UpdateTimestamp)  // $10
+		county.ID,               // $1
+		stateProv.ID,            // $2
+		county.Code,             // $3
+		county.Name,             // $4
+		county.LatitudeAverage,  // $5
+		county.LongitudeAverage, // $6
+		county.CreateUsername,   // $7
+		county.CreateTimestamp,  // $8
+		county.UpdateUsername,   // $9
+		county.UpdateTimestamp)  // $10
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)

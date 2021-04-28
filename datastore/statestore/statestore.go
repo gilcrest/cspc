@@ -12,39 +12,25 @@ import (
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateStateProvince(ctx context.Context, args *CreateArgs) error
+	CreateStateProvince(ctx context.Context, country cspc.Country, stateProv cspc.StateProvince, tx *sql.Tx) error
 }
 
-// NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
-func NewTx(tx *sql.Tx) (*Tx, error) {
-	const op errs.Op = "datastore/statestore/NewTx"
-	if tx == nil {
-		return nil, errs.E(op, errs.MissingField("tx"))
-	}
-	return &Tx{Tx: tx}, nil
+// NewDefaultTransactor is an initializer for DefaultTransactor
+func NewDefaultTransactor(ds datastore.Datastorer) DefaultTransactor {
+	return DefaultTransactor{ds}
 }
 
-// Tx stores a sql.Tx which will be used for all DML operations
-type Tx struct {
-	*sql.Tx
-}
-
-// CreateArgs are the arguments for
-type CreateArgs struct {
-	Country   cspc.Country
-	StateProv cspc.StateProvince
-}
-
-// NewCreateArgs is an initializer for CreateArgs
-func NewCreateArgs(country cspc.Country, stateProv cspc.StateProvince, username string) *CreateArgs {
-	return &CreateArgs{Country: country, StateProv: stateProv}
+// DefaultTransactor is the default database implementation
+// for DML operations
+type DefaultTransactor struct {
+	datastorer datastore.Datastorer
 }
 
 // CreateStateProvince inserts a record in the lookup.state_prov_cd_lkup table
-func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
-	const op errs.Op = "datastore/statestore/Tx.CreateStateProvince"
+func (dt DefaultTransactor) CreateStateProvince(ctx context.Context, country cspc.Country, stateProv cspc.StateProvince, tx *sql.Tx) error {
+	const op errs.Op = "datastore/statestore/DefaultTransactor.CreateStateProvince"
 
-	result, execErr := t.Tx.ExecContext(ctx,
+	result, execErr := tx.ExecContext(ctx,
 		`INSERT INTO lookup.state_prov_lkup (
                                state_prov_id,
                                country_id,
@@ -58,17 +44,17 @@ func (t *Tx) CreateStateProvince(ctx context.Context, args *CreateArgs) error {
                                update_username, 
                                update_timestamp) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		args.StateProv.ID,               // $1
-		args.Country.ID,                 // $2
-		args.StateProv.Code,             // $3
-		args.StateProv.Name,             // $4
-		args.StateProv.FIPSCode,         // $5
-		args.StateProv.LatitudeAverage,  // $6
-		args.StateProv.LongitudeAverage, // $7
-		args.StateProv.CreateUsername,   // $8
-		args.StateProv.CreateTimestamp,  // $9
-		args.StateProv.UpdateUsername,   // $10
-		args.StateProv.UpdateTimestamp)  // $11
+		stateProv.ID,               // $1
+		country.ID,                 // $2
+		stateProv.Code,             // $3
+		stateProv.Name,             // $4
+		stateProv.FIPSCode,         // $5
+		stateProv.LatitudeAverage,  // $6
+		stateProv.LongitudeAverage, // $7
+		stateProv.CreateUsername,   // $8
+		stateProv.CreateTimestamp,  // $9
+		stateProv.UpdateUsername,   // $10
+		stateProv.UpdateTimestamp)  // $11
 
 	if execErr != nil {
 		return errs.E(op, errs.Database, execErr)

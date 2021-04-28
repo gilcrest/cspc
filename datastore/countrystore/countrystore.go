@@ -12,28 +12,25 @@ import (
 
 // Transactor performs DML actions against the DB
 type Transactor interface {
-	CreateCountry(ctx context.Context, c *cspc.Country) error
+	CreateCountry(ctx context.Context, c *cspc.Country, tx *sql.Tx) error
 }
 
-// NewTx initializes a pointer to a Tx struct that holds a *sql.Tx
-func NewTx(tx *sql.Tx) (*Tx, error) {
-	const op errs.Op = "datastore/countrystore/NewTx"
-	if tx == nil {
-		return nil, errs.E(op, errs.MissingField("tx"))
-	}
-	return &Tx{Tx: tx}, nil
+// NewDefaultTransactor is an initializer for DefaultTransactor
+func NewDefaultTransactor(ds datastore.Datastorer) DefaultTransactor {
+	return DefaultTransactor{ds}
 }
 
-// Tx stores a sql.Tx which will be used for all DML operations
-type Tx struct {
-	*sql.Tx
+// DefaultTransactor is the default database implementation
+// for DML operations
+type DefaultTransactor struct {
+	datastorer datastore.Datastorer
 }
 
 // CreateCountry inserts a record in the lookup.country_cd_lkup table
-func (t *Tx) CreateCountry(ctx context.Context, c *cspc.Country) error {
-	const op errs.Op = "datastore/countrystore/Tx.Create"
+func (dt DefaultTransactor) CreateCountry(ctx context.Context, c *cspc.Country, tx *sql.Tx) error {
+	const op errs.Op = "datastore/countrystore/DefaultTransactor.Create"
 
-	result, execErr := t.Tx.ExecContext(ctx,
+	result, execErr := tx.ExecContext(ctx,
 		`INSERT INTO lookup.country_lkup (
                                country_id,
                                country_alpha_2_cd, 

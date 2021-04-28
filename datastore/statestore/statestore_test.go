@@ -8,18 +8,13 @@ import (
 	"github.com/matryer/is"
 
 	"github.com/gilcrest/cspc"
-	"github.com/gilcrest/cspc/app"
 	"github.com/gilcrest/cspc/datastore"
 	"github.com/gilcrest/cspc/datastore/countrystore"
-	"github.com/rs/zerolog"
+	"github.com/gilcrest/cspc/datastoretest"
 )
 
 func TestDB_FindByStateProvCode(t *testing.T) {
-	logger := app.NewLogger(zerolog.DebugLevel)
-	db, cleanup, err := datastore.NewDB(datastore.LocalDatastore, logger)
-	if err != nil {
-		t.Fatal(err)
-	}
+	db, cleanup := datastoretest.NewDB(t)
 	defer cleanup()
 
 	type fields struct {
@@ -32,14 +27,10 @@ func TestDB_FindByStateProvCode(t *testing.T) {
 		c   cspc.Country
 		spc string
 	}
-	var selector countrystore.Selector
 
-	selector, err = countrystore.NewDB(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	countrySelector := countrystore.NewDefaultSelector(datastore.NewDefaultDatastore(db))
 
-	us, err := selector.FindByAlpha2Code(ctx, "US")
+	us, err := countrySelector.FindByAlpha2Code(ctx, "US")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,8 +66,8 @@ func TestDB_FindByStateProvCode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			is := is.New(t)
-			d := &DB{
-				DB: tt.fields.DB,
+			d := &DefaultSelector{
+				datastore.NewDefaultDatastore(tt.fields.DB),
 			}
 			got, err := d.FindByStateProvCode(tt.args.ctx, tt.args.c, tt.args.spc)
 			is.NoErr(err)
