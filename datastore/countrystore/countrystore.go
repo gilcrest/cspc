@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/gilcrest/cspc/datastore"
+
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/errs"
 )
@@ -81,26 +83,24 @@ type Selector interface {
 	FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error)
 }
 
-// NewDB is an initializer for DB
-func NewDB(db *sql.DB) (*DB, error) {
-	const op errs.Op = "datastore/countrystore/NewDB"
-	if db == nil {
-		return nil, errs.E(op, errs.MissingField("db"))
-	}
-	return &DB{DB: db}, nil
+// NewDefaultSelector is an initializer for DefaultSelector
+func NewDefaultSelector(ds datastore.Datastorer) DefaultSelector {
+	return DefaultSelector{ds}
 }
 
-// DB  struct holds a pointer to a sql database
-type DB struct {
-	*sql.DB
+// DefaultSelector is the database implementation for reading Filings
+type DefaultSelector struct {
+	datastore.Datastorer
 }
 
 // FindByAlpha2Code returns a Country struct given an Alpha 2 Code
-func (d *DB) FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error) {
+func (d DefaultSelector) FindByAlpha2Code(ctx context.Context, a2c string) (cspc.Country, error) {
 	const op errs.Op = "datastore/countrystore/DB.FindByAlpha2Code"
 
+	db := d.Datastorer.DB()
+
 	// Prepare the sql statement using bind variables
-	row := d.DB.QueryRowContext(ctx,
+	row := db.QueryRowContext(ctx,
 		`select 	l.country_id,
                        	l.country_alpha_2_cd,
                        	l.country_alpha_3_cd,

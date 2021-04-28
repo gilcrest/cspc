@@ -283,10 +283,7 @@ func loadUSStates(ctx context.Context, a *app.Application) error {
 		transactor      statestore.Transactor
 	)
 
-	countrySelector, err = countrystore.NewDB(a.Datastorer.DB())
-	if err != nil {
-		return errs.E(op, err)
-	}
+	countrySelector = countrystore.NewDefaultSelector(a.Datastorer)
 
 	transactor, err = statestore.NewTx(tx)
 	if err != nil {
@@ -375,14 +372,8 @@ func mapUSCounties2States(ctx context.Context, a *app.Application) ([]cspc.State
 		return nil, errs.E(op, err)
 	}
 
-	countrySelector, err = countrystore.NewDB(a.Datastorer.DB())
-	if err != nil {
-		return nil, errs.E(op, err)
-	}
-	stateSelector, err = statestore.NewDB(a.Datastorer.DB())
-	if err != nil {
-		return nil, errs.E(op, err)
-	}
+	countrySelector = countrystore.NewDefaultSelector(a.Datastorer)
+	stateSelector = statestore.NewDefaultSelector(a.Datastorer)
 
 	us, err := countrySelector.FindByAlpha2Code(ctx, "US")
 	if err != nil {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/gilcrest/cspc/datastore"
+
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/errs"
 )
@@ -92,26 +94,24 @@ type Selector interface {
 	FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (cspc.StateProvince, error)
 }
 
-// NewDB is an initializer for DB
-func NewDB(db *sql.DB) (*DB, error) {
-	const op errs.Op = "datastore/statestore/NewDB"
-	if db == nil {
-		return nil, errs.E(op, errs.MissingField("db"))
-	}
-	return &DB{DB: db}, nil
+// NewDefaultSelector is an initializer for DefaultSelector
+func NewDefaultSelector(ds datastore.Datastorer) DefaultSelector {
+	return DefaultSelector{ds}
 }
 
-// DB  struct holds a pointer to a sql database
-type DB struct {
-	*sql.DB
+// DefaultSelector is the database implementation for reading Filings
+type DefaultSelector struct {
+	datastore.Datastorer
 }
 
 // FindByStateProvCode returns a StateProvince struct given an Alpha 2 Code
-func (d *DB) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (cspc.StateProvince, error) {
+func (d DefaultSelector) FindByStateProvCode(ctx context.Context, c cspc.Country, spc string) (cspc.StateProvince, error) {
 	const op errs.Op = "datastore/statestore/DB.FindByStateProvCode"
 
+	db := d.Datastorer.DB()
+
 	// Prepare the sql statement using bind variables
-	row := d.DB.QueryRowContext(ctx,
+	row := db.QueryRowContext(ctx,
 		`select 	l.state_prov_id,
                        	l.state_prov_cd,
                    		l.state_name,
