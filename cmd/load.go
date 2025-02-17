@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/peterbourgon/ff"
+	"github.com/rs/zerolog"
 
 	"github.com/gilcrest/cspc"
 	"github.com/gilcrest/cspc/app"
@@ -21,7 +22,6 @@ import (
 	"github.com/gilcrest/cspc/datastore/countystore"
 	"github.com/gilcrest/cspc/datastore/statestore"
 	"github.com/gilcrest/cspc/errs"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -92,7 +92,7 @@ func run(args []string) error {
 	}
 
 	// setup logger with appropriate defaults
-	lgr := logger.NewLogger(os.Stdout, minlvl, true)
+	lgr := logger.New(os.Stdout, minlvl, true)
 
 	// logs will be written at the level set in NewLogger (which is
 	// also the minimum level). If the logs are to be written at a
@@ -110,7 +110,7 @@ func run(args []string) error {
 	lgr.Info().Msgf("logging level set to %s", lvl)
 
 	// set global to log errors with stack (or not) based on flag
-	logger.WriteErrorStackGlobal(flgs.logErrorStack)
+	logger.LogErrorStackViaPkgErrors(flgs.logErrorStack)
 	lgr.Info().Msgf("log error stack global set to %t", flgs.logErrorStack)
 
 	// validate port in acceptable range
