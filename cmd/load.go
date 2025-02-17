@@ -20,7 +20,7 @@ import (
 	"github.com/gilcrest/cspc/datastore/countrystore"
 	"github.com/gilcrest/cspc/datastore/countystore"
 	"github.com/gilcrest/cspc/datastore/statestore"
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 	"github.com/rs/zerolog"
 )
 

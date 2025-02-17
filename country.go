@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 )
 
 // CountryFullJSON string is a JSON string with all country information

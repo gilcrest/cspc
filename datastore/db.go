@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 	"github.com/rs/zerolog"
 )
 

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 
 	_ "github.com/lib/pq" // pq driver calls for blank identifier
 )

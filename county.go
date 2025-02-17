@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 )
 
 // USCountyJSON is a list of all US Counties using their FIPS code

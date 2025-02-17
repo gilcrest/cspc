@@ -7,7 +7,7 @@ import (
 	"github.com/gilcrest/cspc/datastore"
 
 	"github.com/gilcrest/cspc"
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 )
 
 // Transactor performs DML actions against the DB

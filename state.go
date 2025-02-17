@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gilcrest/errs"
+	"github.com/gilcrest/cspc/errs"
 )
 
 // USStatesJSON is the JSON array for all US States (including DC and Puerto Rico)
